@@ -55,3 +55,38 @@ Execution Time: 58.499 ms
 (13 rows)
 
 С индексами
+
+```
+date_created | sum
+--------------+-------
+2026-04-22 | 9334
+2026-04-21 | 8657
+2026-04-27 | 6082
+2026-04-26 | 9403
+2026-04-25 | 9461
+2026-04-23 | 9517
+2026-04-24 | 10118
+(7 rows)
+
+Time: 31.216 ms
+                                                                       QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=2669.23..2670.14 rows=91 width=12) (actual time=35.454..35.460 rows=7 loops=1)
+   Group Key: o.date_created
+   Batches: 1  Memory Usage: 24kB
+   ->  Hash Join  (cost=757.11..2656.62 rows=2522 width=8) (actual time=4.495..35.095 rows=2457 loops=1)
+         Hash Cond: (op.order_id = o.id)
+         ->  Seq Scan on order_product op  (cost=0.00..1637.00 rows=100000 width=12) (actual time=0.005..11.058 rows=100000 loops=1)
+         ->  Hash  (cost=725.59..725.59 rows=2522 width=12) (actual time=4.468..4.471 rows=2457 loops=1)
+               Buckets: 4096  Batches: 1  Memory Usage: 148kB
+               ->  Bitmap Heap Scan on orders o  (cost=38.15..725.59 rows=2522 width=12) (actual time=0.256..4.046 rows=2457 loops=1)
+                     Recheck Cond: (((status)::text = 'shipped'::text) AND (date_created > (now() - '7 days'::interval)))
+                     Heap Blocks: exact=627
+                     ->  Bitmap Index Scan on orders_status_date_idx  (cost=0.00..37.52 rows=2522 width=0) (actual time=0.163..0.163 rows=2457 loops=1)
+                           Index Cond: (((status)::text = 'shipped'::text) AND (date_created > (now() - '7 days'::interval)))
+ Planning Time: 0.274 ms
+ Execution Time: 35.504 ms
+(15 rows)
+
+Time: 36.772 ms
+```
