@@ -1,12 +1,15 @@
 DELETE FROM order_product
 WHERE
-    order_id NOT IN (SELECT id FROM orders) OR product_id NOT IN (SELECT id FROM product); 
+    order_id NOT IN (SELECT id FROM orders) OR product_id NOT IN (SELECT id FROM product);
+
+CREATE UNIQUE INDEX idx_product_id ON product(id); 
 
 ALTER TABLE order_product
     ADD CONSTRAINT fk_order_product_product
     FOREIGN KEY (product_id)
     REFERENCES product (id);
 
+CREATE UNIQUE INDEX idx_order_id ON orders(id); 
 
 ALTER TABLE order_product
     ADD CONSTRAINT fk_order_product_orders
