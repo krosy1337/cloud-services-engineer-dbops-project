@@ -20,3 +20,38 @@ WHERE
 o.status = 'shipped' AND o.date_created > NOW() - INTERVAL '7 DAY'
 GROUP BY
 o.date_created;
+
+Без индексов:
+date_created | sum  
+--------------+-------
+2026-04-22 | 9334
+2026-04-21 | 8657
+2026-04-27 | 6082
+2026-04-26 | 9403
+2026-04-25 | 9461
+2026-04-23 | 9517
+2026-04-24 | 10118
+(7 rows)
+
+Time: 49.189 ms
+
+                                                             QUERY PLAN
+
+---
+
+HashAggregate (cost=4580.65..4581.56 rows=91 width=12) (actual time=58.458..58.464 rows=7 loops=1)
+Group Key: o.date_created
+Batches: 1 Memory Usage: 24kB
+-> Hash Join (cost=2668.53..4568.04 rows=2522 width=8) (actual time=23.165..58.032 rows=2457 loops=1)
+Hash Cond: (op.order_id = o.id)
+-> Seq Scan on order_product op (cost=0.00..1637.00 rows=100000 width=12) (actual time=0.006..16.714 rows=100000 loops=1)
+-> Hash (cost=2637.00..2637.00 rows=2522 width=12) (actual time=23.137..23.139 rows=2457 loops=1)
+Buckets: 4096 Batches: 1 Memory Usage: 148kB
+-> Seq Scan on orders o (cost=0.00..2637.00 rows=2522 width=12) (actual time=0.010..22.760 rows=2457 loops=1)
+Filter: (((status)::text = 'shipped'::text) AND (date_created > (now() - '7 days'::interval)))
+Rows Removed by Filter: 97543
+Planning Time: 0.214 ms
+Execution Time: 58.499 ms
+(13 rows)
+
+С индексами
